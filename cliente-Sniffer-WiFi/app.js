@@ -4,19 +4,20 @@ const dgram = require('dgram');
 
 const client = dgram.createSocket('udp4');
 
-const snifferId = 'laptop1';
+const snifferId = 'laptop1'; //cambiar por id del sniffer en el que se ejecute
 
 const {
     parseType,
     parseSSID,
     parseRSSI,
     parseSourceMAC,
-    parseFreq
+    parseFreq,
+    parseChannel
 } = require('./functions');
 
 // creamos sesion de pcap indicando interfaz (en modo monitor con airmon-ng) y filtros
 // sustituir interfaz por la del dispositivo en el que se ejecuta la app
-var pcapSession = pcap.createSession('wlp3s0mon', { filter: 'type mgt subtype probe-req or subtype beacon' });
+var pcapSession = pcap.createSession('wlan0mon', { filter: 'type mgt subtype probe-req or subtype beacon' });
 // var pcapSession = pcap.createSession('wlp3s0mon', ' wlan type mgt subtype probe-req');
 
 pcapSession.on('packet', (rawPacket) => {
@@ -41,8 +42,17 @@ pcapSession.on('packet', (rawPacket) => {
     var RSSI = parseRSSI(rawPacket.buf, length_RT);
     var timestamp = `${ date.toLocaleString() }:${ date.getMilliseconds() }`;
     var MAC_origen = parseSourceMAC(rawPacket.buf, length_RT);
+
+    // ==FREC Y CANAL==
+    // (Comentar las 2 lineas del metodo no usado)
+
+    // Con metodo 1:
     var frec = parseFreq(rawPacket.buf, length_RT);
     var canal = (frec % 2407) / 5;
+
+    // Con metodo 2:
+    // var canal = parseChannel(rawPacket.buf, length_RT);
+    // var frec = 2407 + canal * 5;
 
     console.log(`ssid: ${ SSID }`);
     console.log(`RSSI: ${ RSSI } dBm`);

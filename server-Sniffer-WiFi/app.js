@@ -36,8 +36,9 @@ server.on('message', (msg, rinfo) => {
     console.log(`capturado desde ${ snifferId }, ${rinfo.address}:${rinfo.port}`);
 
     //console.log(JSON.parse(msg));
+
     //guardar en base de datos MongoDB
-    guardarDB(datos)
+    // guardarDB(datos);
 
 });
 

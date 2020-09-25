@@ -47,9 +47,12 @@ const parseSSID = (bytes, l_RT, type) => {
 const parseRSSI = (bytes, l_RT) => {
     // en el byte 26, contando desde el final del radioTap.
     // He comprobado que el radio tap no siempre tiene la misma longitud,
+    // ya que depende del vendor.
     // hay algunos bytes que pueden variar antes del campo  de la señal,
     // así que si cuento desde el final hacia atras siempre está en el mismo sitio
-    return bytes.readInt8(l_RT - 26);
+
+    // return bytes.readInt8(l_RT - 26); //para tjtas intel 
+    return bytes.readInt8(l_RT - 4) // para tjtas intel (RT de 56 Bytes) y TP-LINK WN7200 (RT de 18 Bytes)
 
 }
 
@@ -67,12 +70,44 @@ const parseSourceMAC = (bytes, l_RT) => {
 
 }
 
-//Frecuencia de emision
+// ==========================
+// ====FRECUENCIA Y CANAL====
+// ==========================
+
+// 2 métodos. Dependiendo circunstancias usar uno u otro. 
+
+// METODO 1
+// Frecuencia de emision (de la frec sacamos canal)
 const parseFreq = (bytes, l_RT) => {
+    //Una forma sería sacar la freq del radioTap (teniendo en cuenta que es diferente para cada vendor)
+
+    //--Para tjtas Intel:--
     // byte mas significativo en byte 29 desde el fin radioTap hacia atras
     // byte menos siginificativo en byte 30 desde fin radioTap hacia atras
-    return (bytes[l_RT - 29] * 256) + (bytes[l_RT - 30]);
-    //devuelve freq en Mhz
+    // return (bytes[l_RT - 29] * 256) + (bytes[l_RT - 30]);
+
+    //--Para tjta TP-LINK WN7200
+    // devuelve freq en Mhz
+    // byte mas significativo en byte 7 desde el fin radioTap hacia atras
+    // byte menos siginificativo en byte 8 desde fin radioTap hacia atras
+    return (bytes[l_RT - 7] * 256) + (bytes[l_RT - 8]);
+
+}
+
+
+// METODO 2
+// Canal de emisión (del canal sacamos la frec)
+const parseChannel = (bytes, l_RT) => {
+    //==Independiente de vendor:==
+    // Hay varios campos con longitud variable antes de llegar al campo del canal
+    // que hay que tener en cuenta.
+    // (En algunos casos muy concretos de algunos Probe Request no está todo en el mismo sitio,
+    // Para estar seguros al 100% de obtener la frecuencia correctamente mejor usar METODO 1)
+    var SSID_len = bytes[l_RT + 37]; // longitud campo SSID
+    var Supported_Rates_len = bytes[l_RT + 39 + SSID_len]; // longitud tasas soportadas
+    var ChannelPos = l_RT + 42 + SSID_len + Supported_Rates_len;
+
+    return (bytes[ChannelPos]);
 }
 
 module.exports = {
@@ -80,5 +115,6 @@ module.exports = {
     parseSSID,
     parseRSSI,
     parseSourceMAC,
-    parseFreq
+    parseFreq,
+    parseChannel
 }
