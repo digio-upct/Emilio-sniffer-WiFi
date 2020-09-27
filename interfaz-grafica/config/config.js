@@ -27,6 +27,7 @@ if (process.env.NODE_ENV === 'dev') {
     urlDB = 'mongodb://localhost:27017/capturasWifi';
 } else {
     urlDB = 'mongodb+srv://< aqui el usuario >:< aqui el pass >@cluster0.qplg4.mongodb.net/capturasWifi';
+    // urlDB = process.env.MONGO_URL; //al poner la url en variable de entorno de heroku
 }
 
 process.env.URLDB = urlDB;
